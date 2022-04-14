@@ -1,4 +1,4 @@
-,ThryroidClass,patient_age,patient_gender,presc_thyroxine,queried_why_on_thyroxine,presc_anthyroid_meds,sick,pregnant,thyroid_surgery,radioactive_iodine_therapyI131,query_hypothyroid,query_hyperthyroid,lithium,goitre,tumor,hypopituitarism,psych_condition,TSH_measured,TSH_reading,T3_measured,T3_reading,T4_measured,T4_reading,thyrox_util_rate_T4U_measured,thyrox_util_rate_T4U_reading,FTI_measured,FTI_reading
+ID,ThryroidClass,patient_age,patient_gender,presc_thyroxine,queried_why_on_thyroxine,presc_anthyroid_meds,sick,pregnant,thyroid_surgery,radioactive_iodine_therapyI131,query_hypothyroid,query_hyperthyroid,lithium,goitre,tumor,hypopituitarism,psych_condition,TSH_measured,TSH_reading,T3_measured,T3_reading,T4_measured,T4_reading,thyrox_util_rate_T4U_measured,thyrox_util_rate_T4U_reading,FTI_measured,FTI_reading
 0,negative,41.0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1.3,1,2.5,1,125.0,1,1.14,1,109.0
 1,negative,23.0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,4.1,1,2.0,1,102.0,0,,0,
 2,negative,46.0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0.98,0,,1,109.0,1,0.91,1,120.0
