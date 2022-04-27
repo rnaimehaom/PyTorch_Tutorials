@@ -99,3 +99,12 @@ class Transformer(nn.Module):
             x = attention(x, mask=mask) #go to attention
             x = mlp(x)
         return x
+
+
+# Create the image transformer
+
+class ImageTransformer(nn.Module):
+    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads,
+                mlp_dim, channels=3, dropout=0.1, emb_dropout=0.1):
+                super().__init__()
+                
