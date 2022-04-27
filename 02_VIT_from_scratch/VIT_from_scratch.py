@@ -104,7 +104,14 @@ class Transformer(nn.Module):
 # Create the image transformer
 
 class ImageTransformer(nn.Module):
-    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads,
-                mlp_dim, channels=3, dropout=0.1, emb_dropout=0.1):
-                super().__init__()
-                
+    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads,mlp_dim, channels=3, dropout=0.1, emb_dropout=0.1):
+            super().__init__()
+            assert image_size % patch_size == 0, '[IMAGE DIM ERROR] image dimensions mist be divisible by the patch size of the image'
+            num_patches = (image_size // patch_size) ** 2 # e.g. (32/4)**2= 64
+            patch_dim = channels * patch_size ** 2 # e.g. 3*8**2 = 64*3
+            self.patch_size = patch_size
+            self.pos_embedding = nn.Parameter(torch.empty(1, (num_patches + 1), dim))
+            # Standard deviation of the gaussian initialised to .02 as per
+            # an image is worth 16 * 16 words
+            torch.nn.init.normal_(self.pos_embedding, std=.02)
+
