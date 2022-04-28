@@ -114,4 +114,17 @@ class ImageTransformer(nn.Module):
             # Standard deviation of the gaussian initialised to .02 as per
             # an image is worth 16 * 16 words
             torch.nn.init.normal_(self.pos_embedding, std=.02)
+            self.patch_conv = nn.Conv2d(3, dim, patch_size, stride = patch_size) #eqivalent to x matmul E, E= embedd matrix, this is the linear patch projection
+            #self.E = nn.Parameter(nn.init.normal_(torch.empty(BATCH_SIZE_TRAIN,patch_dim,dim)),requires_grad = True)
+            self.cls_token = nn.Parameter(torch.zeros(1,1,dim))
+            self.dropout = nn.Dropout(emb_dropout)
+            # Call our previous class, the transformer to pass to 
+            # multiple attention heads and pos encodings
+            # through patch extraction similar to how NLP text is processed
+            # and masked
+            self.transformer = Transformer(dim, depth, heads, mlp_dim, dropout)
+            self.to_cls_token = nn.Identity()
+
+
+
 
