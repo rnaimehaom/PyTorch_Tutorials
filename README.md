@@ -2,7 +2,7 @@
  <!-- badges: start -->
   [![PyTorchTutorials: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
   [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
-  [![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
+  [![Npm package license](https://badgen.net/npm/llicense/discord.js)](https://npmjs.com/package/discord.js)
 <!-- badges: end -->
 
 <img src ="man/figures/PyHacks.jpeg"> <!-- width="300" height="150">-->
