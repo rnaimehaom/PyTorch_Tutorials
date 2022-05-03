@@ -127,5 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-01_MLP_Thyroid_Classifier/data/mymodel.pth
-01_MLP_Thyroid_Classifier/data/thyroid_model.pth
+01_MLP_Thyroid_Classifier/confusion_mat.csv
+.gitignore
+01_MLP_Thyroid_Classifier/thyroid_raw.csv
+01_MLP_Thyroid_Classifier/confusion_matrix_thyroid.csv
+01_MLP_Thyroid_Classifier/data/
+
