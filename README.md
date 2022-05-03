@@ -5,6 +5,7 @@
   [![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
   ![GitHub last commit](https://img.shields.io/github/last-commit/StatsGary/PyTorch_Tutorials)
   ![GitHub Repo stars](https://img.shields.io/github/stars/StatsGary/PyTorch_Tutorials?label=PyTorch_Tutorials%20Stars)
+  [![GitHub forks](https://img.shields.io/github/forks/StatsGary/PyTorch_Tutorials.svg?style=social&label=Fork&maxAge=2592000)](https://github.com/StatsGary/PyTorch_Tutorials)
 <!-- badges: end -->
 
 <img src ="man/figures/PyHacks.jpeg"> <!-- width="300" height="150">-->
