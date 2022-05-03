@@ -133,3 +133,5 @@ dmypy.json
 01_MLP_Thyroid_Classifier/confusion_matrix_thyroid.csv
 01_MLP_Thyroid_Classifier/data/
 
+man/.DS_Store
+.DS_Store
