@@ -1,7 +1,7 @@
 # PyTorch Tutorials
  <!-- badges: start -->
   [![PyTorchTutorials: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-  [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
+  [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/StatsGary/PyTorch_Tutorials)
   [![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
 <!-- badges: end -->
 
