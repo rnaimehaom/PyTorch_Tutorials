@@ -1,6 +1,7 @@
 # PyTorch Tutorials
  <!-- badges: start -->
   [![PyTorchTutorials: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+  [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 <!-- badges: end -->
 
 <img src ="man/figures/PyHacks.jpeg"> <!-- width="300" height="150">-->
