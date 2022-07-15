@@ -66,7 +66,7 @@ class MLPRegressor(nn.Module):
 
         # Layer list
         layer_list = []
-        numb_embeds = [nf for ni, nf in emb_szs]
+        numb_embeds = [nf for _, nf in embed_size]
         numb_inputs = numb_embeds + n_continuous
 
         for i in layers:
@@ -86,7 +86,13 @@ class MLPRegressor(nn.Module):
         for idx, emb in enumerate(self.embeds):
             embeds_list.append(emb(x_cats[:,idx]))
 
-        x_variables = torch.cat(embeds_list,1)
-        x_variables = self.dropout(x_variables)
+        # Get categorical values
+        x = torch.cat(embeds_list,1)
+        x = self.dropout(x)
+        # Get continuous values
+        x_conts = self.norm_cont(x_conts)
+        x = torch.cat([x, x_conts], axis=1)
+        x = self.layers(x)
+        return x
 
         
