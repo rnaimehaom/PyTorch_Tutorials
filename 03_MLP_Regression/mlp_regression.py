@@ -52,3 +52,41 @@ print(cats.shape, cont_cols.shape, y.shape)
 #=====================================================================================
 selfembeds = nn.ModuleList([nn.Embedding(ne,nf) for ne, nf in emb_szs])
 print(selfembeds)
+
+# Create the torch model
+class MLPRegressor(nn.Module):
+
+    def __init__(self, embed_size, n_continuous, layers, 
+                output_size=1, drop_out_prob=0.5):
+        # Sub class the nn.Module
+        super().__init__()
+        self.embeds = nn.ModuleList([nn.Embedding(ni, nf) for ni, nf in embed_size])
+        self.dropout = nn.Dropout(drop_out_prob)
+        self.norm_cont = nn.BatchNorm1d(n_continuous)
+
+        # Layer list
+        layer_list = []
+        numb_embeds = [nf for ni, nf in emb_szs]
+        numb_inputs = numb_embeds + n_continuous
+
+        for i in layers:
+            layer_list.append(nn.Linear(numb_inputs, i))
+            layer_list.append(nn.ReLU(inplace=True))
+            layer_list.append(nn.BatchNorm1d(i))
+            layer_list.append(nn.Dropout(drop_out_prob))
+            numb_inputs = i
+
+        layer_list.append(nn.Linear(layers[-1], output_size)) #Default output to 1 as regression problem
+        self.layers = nn.Sequential(*layer_list)
+
+
+    def forward(self, x_cats, x_conts):
+        embeds_list = []
+
+        for idx, emb in enumerate(self.embeds):
+            embeds_list.append(emb(x_cats[:,idx]))
+
+        x_variables = torch.cat(embeds_list,1)
+        x_variables = self.dropout(x_variables)
+
+        
