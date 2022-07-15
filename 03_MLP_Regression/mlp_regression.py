@@ -31,7 +31,12 @@ cats = np.stack([df[col].cat.codes.values for col in cat_cols],axis=1)
 
 # Convert this to a tensor
 cats = torch.tensor(cats, dtype=torch.int64)
-print(cats)
+
+cat_sizes = [len(df[col].cat.categories) for col in cat_cols]
+print(cat_sizes)
+# Get embedding sizes
+emb_szs = [(size, min(50,(size+1)//2)) for size in cat_sizes]
+print(emb_szs)
 
 # CONVERT CONTINUOUS VARIABLES
 cont_cols = np.stack([df[col].values for col in cont_cols], axis=1)
@@ -41,3 +46,9 @@ print(cont_cols)
 #CONVERT TARGET (Y) LABEL
 y= torch.tensor(df[y].values,dtype=float)
 print(cats.shape, cont_cols.shape, y.shape)
+
+#=====================================================================================
+# 
+#=====================================================================================
+selfembeds = nn.ModuleList([nn.Embedding(ne,nf) for ne, nf in emb_szs])
+print(selfembeds)
