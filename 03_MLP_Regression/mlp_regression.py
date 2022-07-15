@@ -62,11 +62,11 @@ class MLPRegressor(nn.Module):
         super().__init__()
         self.embeds = nn.ModuleList([nn.Embedding(ni, nf) for ni, nf in embed_size])
         self.dropout = nn.Dropout(drop_out_prob)
-        self.norm_cont = nn.BatchNorm1d(n_continuous)
+        self.bn_contin_feats = nn.BatchNorm1d(n_continuous)
 
         # Layer list
         layer_list = []
-        numb_embeds = [nf for _, nf in embed_size]
+        numb_embeds = sum((nf for _, nf in embed_size))
         numb_inputs = numb_embeds + n_continuous
 
         for i in layers:
@@ -82,17 +82,23 @@ class MLPRegressor(nn.Module):
 
     def forward(self, x_cats, x_conts):
         embeds_list = []
-
         for idx, emb in enumerate(self.embeds):
             embeds_list.append(emb(x_cats[:,idx]))
-
         # Get categorical values
         x = torch.cat(embeds_list,1)
         x = self.dropout(x)
         # Get continuous values
-        x_conts = self.norm_cont(x_conts)
+        x_conts = self.bn_contin_feats(x_conts)
         x = torch.cat([x, x_conts], axis=1)
         x = self.layers(x)
         return x
 
-        
+# Define model 
+torch.manual_seed(123)
+model = MLPRegressor(emb_szs, 
+                    n_continuous=cont_cols.shape[1],
+                    layers=[200,100],
+                    output_size=1, 
+                    drop_out_prob=0.4)
+
+print(model)
