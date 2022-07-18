@@ -31,6 +31,7 @@ cats = np.stack([df[col].cat.codes.values for col in cat_cols],axis=1)
 
 # Convert this to a tensor
 cats = torch.tensor(cats, dtype=torch.int64)
+print(cats[:5])
 
 cat_sizes = [len(df[col].cat.categories) for col in cat_cols]
 print(cat_sizes)
@@ -40,11 +41,11 @@ print(emb_szs)
 
 # CONVERT CONTINUOUS VARIABLES
 cont_cols = np.stack([df[col].values for col in cont_cols], axis=1)
-cont_cols = torch.tensor(cont_cols, dtype=torch.float)
+cont_cols = torch.tensor(cont_cols, dtype=torch.float)#.reshape(-1,1)
 print(cont_cols)
 
 #CONVERT TARGET (Y) LABEL
-y= torch.tensor(df[y].values,dtype=float)
+y = torch.tensor(df[y].values,dtype=torch.float).reshape(-1,1)
 print(cats.shape, cont_cols.shape, y.shape)
 
 #=====================================================================================
@@ -52,54 +53,52 @@ print(cats.shape, cont_cols.shape, y.shape)
 #=====================================================================================
 selfembeds = nn.ModuleList([nn.Embedding(ne,nf) for ne, nf in emb_szs])
 print(selfembeds)
+cat_szs = [len(df[col].cat.categories) for col in cat_cols]
+emb_szs = [(size, min(50, (size+1)//2)) for size in cat_szs]
+emb_szs
 
 # Create the torch model
 class MLPRegressor(nn.Module):
-
-    def __init__(self, embed_size, n_continuous, layers, 
-                output_size=1, drop_out_prob=0.5):
-        # Sub class the nn.Module
+    def __init__(self, emb_szs, n_cont, out_sz, layers, p=0.5):
         super().__init__()
-        self.embeds = nn.ModuleList([nn.Embedding(ni, nf) for ni, nf in embed_size])
-        self.dropout = nn.Dropout(drop_out_prob)
-        self.bn_contin_feats = nn.BatchNorm1d(n_continuous)
-
-        # Layer list
-        layer_list = []
-        numb_embeds = sum((nf for _, nf in embed_size))
-        numb_inputs = numb_embeds + n_continuous
-
+        self.embeds = nn.ModuleList([nn.Embedding(ni, nf) for ni,nf in emb_szs])
+        self.emb_drop = nn.Dropout(p)
+        self.bn_cont = nn.BatchNorm1d(n_cont)
+        
+        layerlist = []
+        n_emb = sum((nf for ni,nf in emb_szs))
+        n_in = n_emb + n_cont
+        
         for i in layers:
-            layer_list.append(nn.Linear(numb_inputs, i))
-            layer_list.append(nn.ReLU(inplace=True))
-            layer_list.append(nn.BatchNorm1d(i))
-            layer_list.append(nn.Dropout(drop_out_prob))
-            numb_inputs = i
-
-        layer_list.append(nn.Linear(layers[-1], output_size)) #Default output to 1 as regression problem
-        self.layers = nn.Sequential(*layer_list)
-
-
-    def forward(self, x_cats, x_conts):
-        embeds_list = []
-        for idx, emb in enumerate(self.embeds):
-            embeds_list.append(emb(x_cats[:,idx]))
-        # Get categorical values
-        x = torch.cat(embeds_list,1)
-        x = self.dropout(x)
-        # Get continuous values
-        x_conts = self.bn_contin_feats(x_conts)
-        x = torch.cat([x, x_conts], axis=1)
+            layerlist.append(nn.Linear(n_in,i)) 
+            layerlist.append(nn.ReLU(inplace=True))
+            layerlist.append(nn.BatchNorm1d(i))
+            layerlist.append(nn.Dropout(p))
+            n_in = i
+        layerlist.append(nn.Linear(layers[-1],out_sz))
+            
+        self.layers = nn.Sequential(*layerlist)
+    
+    def forward(self, x_cat, x_cont):
+        embeddings = []
+        for i,e in enumerate(self.embeds):
+            embeddings.append(e(x_cat[:,i]))
+        x = torch.cat(embeddings, 1)
+        x = self.emb_drop(x)
+        
+        x_cont = self.bn_cont(x_cont)
+        x = torch.cat([x, x_cont], 1)
         x = self.layers(x)
         return x
 
 # Define model 
 torch.manual_seed(123)
 model = MLPRegressor(emb_szs, 
-                    n_continuous=cont_cols.shape[1],
-                    layers=[200,100],
-                    output_size=1, 
-                    drop_out_prob=0.4)
+                    cont_cols.shape[1],
+                    1,
+                    [200,100], p=0.4)
+
+
 
 print(model)
 
@@ -118,7 +117,7 @@ y_test = y[batch_size-test_size:batch_size]
 
 #Create the loss function and optimizer
 import time
-def train(cat_train, con_train,y_train, learn_rate=0.001, epochs=300):
+def train(category_train, continous_train,y_training, learn_rate=0.001, epochs=300):
     print('[INFO] starting training')
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learn_rate)
@@ -132,20 +131,19 @@ def train(cat_train, con_train,y_train, learn_rate=0.001, epochs=300):
         loss = torch.sqrt(criterion(y_pred, y_train)) #RMSE
         # Append losses to empty list
         losses.append(loss)
-        if i%25 ==1:
-            print(f'epoch: {i:3} loss: {loss.item():10.8f}')
+        if i%25 == 1:
+            print(f'epoch: {i:3}  loss: {loss.item():10.8f}')
 
         # Clear the gradient tape
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    print(f'epoch: {i:3} loss: {loss.item():10.8f}')
-    print(f'\nDuration: {time.time() - start_time:.0f} seconds')
+    print(f'epoch: {i:3}  loss: {loss.item():10.8f}') # print the last line
+    print(f'\nDuration: {time.time() - start_time:.0f} seconds') # print the time elapsed
 
 
 # Train the model
-
 train(cat_train, con_train, y_train, epochs=400)
 
 
