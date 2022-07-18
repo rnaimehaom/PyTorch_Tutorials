@@ -117,8 +117,35 @@ y_test = y[batch_size-test_size:batch_size]
 
 
 #Create the loss function and optimizer
-
-def train(learn_rate=0.001):
+import time
+def train(cat_train, con_train,y_train, learn_rate=0.001, epochs=300):
     print('[INFO] starting training')
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learn_rate)
+    start_time = time.time()
+    epochs = epochs
+    # Create empty list to capture the losses
+    losses = []
+    for i in range(epochs):
+        i+=1
+        y_pred = model(cat_train, con_train)
+        loss = torch.sqrt(criterion(y_pred, y_train)) #RMSE
+        # Append losses to empty list
+        losses.append(loss)
+        if i%25 ==1:
+            print(f'epoch: {i:3} loss: {loss.item():10.8f}')
+
+        # Clear the gradient tape
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    print(f'epoch: {i:3} loss: {loss.item():10.8f}')
+    print(f'\nDuration: {time.time() - start_time:.0f} seconds')
+
+
+# Train the model
+
+train(cat_train, con_train, y_train, epochs=400)
+
+
