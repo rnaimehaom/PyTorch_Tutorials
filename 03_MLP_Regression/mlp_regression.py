@@ -102,3 +102,23 @@ model = MLPRegressor(emb_szs,
                     drop_out_prob=0.4)
 
 print(model)
+
+# Split data
+batch_size = 60000
+test_size = int(batch_size * 2)
+
+cat_train = cats[:batch_size-test_size]
+cat_test = cats[batch_size-test_size:batch_size]
+con_train = cont_cols[:batch_size-test_size]
+con_test = cont_cols[batch_size-test_size:batch_size]
+y_train = y[:batch_size-test_size:batch_size]
+y_test = y[batch_size-test_size:batch_size]
+
+
+
+#Create the loss function and optimizer
+
+def train(learn_rate=0.001):
+    print('[INFO] starting training')
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learn_rate)
