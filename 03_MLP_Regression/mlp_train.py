@@ -171,7 +171,7 @@ def train(model, y_train, categorical_train, continuous_train,
 
     # Save model
     torch.save(model.state_dict(), f'model_artifacts/{data_name}_{epochs}.pt')
-
+    # Return components to use later
     return losses, preds, diffs, actuals, model, valid_results_dict, epochs
 
 
@@ -214,6 +214,7 @@ eval_df.to_csv(f'data/{data_name}_valid_data_{current_time}.csv', index=None)
 
 # Create SNS chart
 plt.figure()
-sns.lineplot(data=eval_df, x='epochs', y='loss')
+palette = sns.color_palette("mako_r", 6)
+sns.lineplot(data=eval_df, x='epochs', y='loss', palette=palette)
 plt.savefig(f'charts/{data_name}_loss_chart_{current_time}.png')
 
