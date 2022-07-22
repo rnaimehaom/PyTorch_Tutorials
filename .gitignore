@@ -144,3 +144,13 @@ man/.DS_Store
 03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-44-53.csv
 03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-45-35.csv
 03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-46-56.csv
+03_MLP_Regression/model_artifacts/medical_insurance_400.pt
+03_MLP_Regression/charts/medical_insurance_loss_chart_2022-07-22_14-54-22.png
+03_MLP_Regression/charts/medical_insurance_loss_chart_2022-07-22_14-54-55.png
+03_MLP_Regression/charts/medical_insurance_loss_chart_2022-07-22_14-55-54.png
+03_MLP_Regression/charts/medical_insurancevalid_results_2022-07-22_14-54-22.png
+03_MLP_Regression/charts/medical_insurancevalid_results_2022-07-22_14-54-55.png
+03_MLP_Regression/charts/medical_insurancevalid_results_2022-07-22_14-55-54.png
+03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-54-22.csv
+03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-54-55.csv
+03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-55-54.csv
