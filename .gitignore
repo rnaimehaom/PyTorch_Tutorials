@@ -135,3 +135,12 @@ dmypy.json
 
 man/.DS_Store
 .DS_Store
+03_MLP_Regression/charts/medical_insurance_loss_chart_2022-07-22_14-44-53.png
+03_MLP_Regression/charts/medical_insurance_loss_chart_2022-07-22_14-45-35.png
+03_MLP_Regression/charts/medical_insurance_loss_chart_2022-07-22_14-46-56.png
+03_MLP_Regression/charts/medical_insurancevalid_results_2022-07-22_14-44-53.png
+03_MLP_Regression/charts/medical_insurancevalid_results_2022-07-22_14-45-35.png
+03_MLP_Regression/charts/medical_insurancevalid_results_2022-07-22_14-46-56.png
+03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-44-53.csv
+03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-45-35.csv
+03_MLP_Regression/data/medical_insurance_valid_data_2022-07-22_14-46-56.csv

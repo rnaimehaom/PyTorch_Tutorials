@@ -13,6 +13,7 @@ from datetime import datetime as dt
 #=====================================================================================
 # Data Loading
 #=====================================================================================
+data_name ='medical_insurance'
 
 # Read in the medical insurance data
 df = pd.read_csv('https://raw.githubusercontent.com/StatsGary/Data/main/insurance.csv')
@@ -43,7 +44,6 @@ for cat in cat_cols:
 cats = np.stack([df[col].cat.codes.values for col in cat_cols], 1)
 
 cats = torch.tensor(cats, dtype=torch.int64)
-print(cats[:5])
 
 # Convert continuous variables to a tensor
 conts = np.stack([df[col].values for col in cont_cols], 1)
@@ -54,7 +54,6 @@ y = torch.tensor(df[y].values, dtype=torch.float).reshape(-1,1)
 # Set embedding sizes
 cat_szs = [len(df[col].cat.categories) for col in cat_cols]
 emb_szs = [(size, min(50, (size+1)//2)) for size in cat_szs]
-print(emb_szs)
 
 class MLPRegressor(nn.Module):
 
@@ -94,7 +93,9 @@ class MLPRegressor(nn.Module):
 # Use the model
 torch.manual_seed(123)
 model = MLPRegressor(emb_szs, conts.shape[1], out_sz=1, layers=[200,100], p=0.4)
+print('[INFO] Model definition')
 print(model)
+print('='* 80)
 
 #=====================================================================================
 # Split the data
@@ -168,12 +169,12 @@ def train(model, y_train, categorical_train, continuous_train,
         'actuals': actuals
     }
 
-    return losses, preds, diffs, actuals, model, valid_results_dict
+    return losses, preds, diffs, actuals, model, valid_results_dict, epochs
 
 
 # Use the training function to train the model
 
-losses, preds, diffs, actuals, model, valid_results_dict = train(
+losses, preds, diffs, actuals, model, valid_results_dict, epochs = train(
             model=model, y_train=y_train, 
             categorical_train=cat_train, 
             continuous_train=con_train,
@@ -181,8 +182,8 @@ losses, preds, diffs, actuals, model, valid_results_dict = train(
             categorical_valid=cat_test,
             continuous_valid=con_test,
             learning_rate=0.01, 
-            epochs=1000, 
-            print_out_interval=100)
+            epochs=400, 
+            print_out_interval=25)
 
 #=====================================================================================
 # Validate the model
@@ -190,7 +191,25 @@ losses, preds, diffs, actuals, model, valid_results_dict = train(
 valid_res = pd.DataFrame(valid_results_dict)
 
 # Visualise results
-current_time = dt.now().strftime('%Y-%m-%d %H %M %S')
+current_time = dt.now().strftime('%Y-%m-%d_%H-%M-%S')
+plt.figure()
 sns.scatterplot(data=valid_res, 
                 x='predictions', y='actuals', size='diffs', hue='diffs')#, palette='deep')
-plt.savefig(f'charts/valid_results_{current_time}.png')
+plt.savefig(f'charts/{data_name}valid_results_{current_time}.png')
+
+# Produce validation graph
+    
+losses_collapsed = [losses[i].item() for i in range(epochs)]
+epochs = [ep+1 for ep in range(epochs)]
+eval_df = pd.DataFrame({
+    'epochs': epochs,
+    'loss': losses_collapsed
+})
+
+# Save data to csv
+eval_df.to_csv(f'data/{data_name}_valid_data_{current_time}.csv', index=None)
+
+# Create SNS chart
+plt.figure()
+sns.lineplot(data=eval_df, x='epochs', y='loss')
+plt.savefig(f'charts/{data_name}_loss_chart_{current_time}.png')
