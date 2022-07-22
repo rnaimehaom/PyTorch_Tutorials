@@ -1,3 +1,4 @@
+
 import torch
 import torch.nn as nn
 
@@ -6,7 +7,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 
-batch_size = 60000
+import seaborn as sns
+from datetime import datetime as dt
 
 #=====================================================================================
 # Data Loading
@@ -17,6 +19,12 @@ df = pd.read_csv('https://raw.githubusercontent.com/StatsGary/Data/main/insuranc
 
 # Drop nulls
 df.dropna(axis='columns',inplace=True)
+
+# Get number of rows
+obs = len(df)
+
+# Divide obs in half to get half batch size
+batch_size = obs // 2
 
 #=====================================================================================
 # Feature Engineering
@@ -99,28 +107,30 @@ con_test = conts[batch_size-test_size:batch_size]
 y_train = y[:batch_size-test_size]
 y_test = y[batch_size-test_size:batch_size]
 
-print(cat_train.shape)
-
 #=====================================================================================
 # Train the model
 #=====================================================================================
 
-def train(y_train, categorical_train, continuous_train, learning_rate=0.001, epochs=300,
-          print_out_interval=2):
+def train(model, y_train, categorical_train, continuous_train,
+          y_val, categorical_valid, continuous_valid,
+          learning_rate=0.001, epochs=300, print_out_interval=2):
 
+    global criterion
     criterion = nn.MSELoss()  # we'll convert this to RMSE later
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     start_time = time.time()
+    model.train()
 
     losses = []
+    preds = []
 
     for i in range(epochs):
         i+=1 #Zero indexing trick to start the print out at epoch 1
         y_pred = model(categorical_train, continuous_train)
+        preds.append(y_pred)
         loss = torch.sqrt(criterion(y_pred, y_train)) # RMSE
         losses.append(loss)
         
-        # a neat trick to save screen space:
         if i%print_out_interval == 1:
             print(f'epoch: {i:3}  loss: {loss.item():10.8f}')
 
@@ -128,9 +138,59 @@ def train(y_train, categorical_train, continuous_train, learning_rate=0.001, epo
         loss.backward()
         optimizer.step()
 
+    print('='*80)
     print(f'epoch: {i:3}  loss: {loss.item():10.8f}') # print the last line
-    print(f'\nDuration: {time.time() - start_time:.0f} seconds') # print the time elapsed
+    print(f'Duration: {time.time() - start_time:.0f} seconds') # print the time elapsed
 
-    return losses, model
+    # Evaluate model
+    with torch.no_grad():
+        y_val = model(categorical_valid, continuous_valid)
+        loss = torch.sqrt(criterion(y_val, y_test))
+    print(f'RMSE: {loss:.8f}')
 
-losses, model = train(y_train, cat_train, con_train, learning_rate=0.001, epochs=5000, print_out_interval=100)
+    # Create empty list to store my results
+    preds = []
+    diffs = []
+    actuals = []
+
+    for i in range(len(categorical_valid)):
+        diff = np.abs(y_val[i].item() - y_test[i].item())
+        pred = y_val[i].item()
+        actual = y_test[i].item()
+
+        diffs.append(diff)
+        preds.append(pred)
+        actuals.append(actual)
+
+    valid_results_dict = {
+        'predictions': preds,
+        'diffs': diffs,
+        'actuals': actuals
+    }
+
+    return losses, preds, diffs, actuals, model, valid_results_dict
+
+
+# Use the training function to train the model
+
+losses, preds, diffs, actuals, model, valid_results_dict = train(
+            model=model, y_train=y_train, 
+            categorical_train=cat_train, 
+            continuous_train=con_train,
+            y_val=y_test, 
+            categorical_valid=cat_test,
+            continuous_valid=con_test,
+            learning_rate=0.01, 
+            epochs=1000, 
+            print_out_interval=100)
+
+#=====================================================================================
+# Validate the model
+#=====================================================================================
+valid_res = pd.DataFrame(valid_results_dict)
+
+# Visualise results
+current_time = dt.now().strftime('%Y-%m-%d %H %M %S')
+sns.scatterplot(data=valid_res, 
+                x='predictions', y='actuals', size='diffs', hue='diffs')#, palette='deep')
+plt.savefig(f'charts/valid_results_{current_time}.png')
