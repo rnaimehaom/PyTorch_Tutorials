@@ -37,14 +37,17 @@ conts = torch.tensor(conts, dtype=torch.float)
 y = torch.tensor(df[y].values, dtype=torch.float).reshape(-1,1)
 # Set embedding sizes
 cat_szs = [len(df[col].cat.categories) for col in cat_cols]
-emb_szs = [(size, min(50, (size+1)//2)) for size in cat_szs]
+#emb_szs = [(size, min(50, (size+1)//2)) for size in cat_szs]
+emb_szs = [(2, 1), (2, 1), (4, 2), (6, 3)]
 
-print(emb_szs)
 
 # Instantiate inference model
 model_infer = MLPRegressor(emb_szs, conts.shape[1], 1, [200,100], p=0.4)
 model_infer.load_state_dict(torch.load('model_artifacts/medical_insurance_400.pt'))
 print(model_infer.eval())
+
+# Create function to infer the samples
+
 
 
 
