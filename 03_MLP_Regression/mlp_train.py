@@ -54,6 +54,8 @@ y = torch.tensor(df[y].values, dtype=torch.float).reshape(-1,1)
 # Set embedding sizes
 cat_szs = [len(df[col].cat.categories) for col in cat_cols]
 emb_szs = [(size, min(50, (size+1)//2)) for size in cat_szs]
+print(emb_szs)
+print(conts.shape[1])
 
 class MLPRegressor(nn.Module):
 
