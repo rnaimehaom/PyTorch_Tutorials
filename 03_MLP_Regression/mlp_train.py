@@ -42,7 +42,6 @@ for cat in cat_cols:
     df[cat] = df[cat].astype('category')
 
 cats = np.stack([df[col].cat.codes.values for col in cat_cols], 1)
-
 cats = torch.tensor(cats, dtype=torch.int64)
 
 # Convert continuous variables to a tensor
