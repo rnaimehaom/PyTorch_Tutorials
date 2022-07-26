@@ -1,3 +1,4 @@
+from http.client import CannotSendHeader
 import torch
 import torch.nn as nn
 import numpy as np
@@ -46,10 +47,28 @@ model_infer = MLPRegressor(emb_szs, conts.shape[1], 1, [200,100], p=0.4)
 model_infer.load_state_dict(torch.load('model_artifacts/medical_insurance_400.pt'))
 print(model_infer.eval())
 
-# Create function to infer the samples
 
+def prod_data(model, cat_prod, cont_prod, verbose=False):
+    # Pass the inputs from the cont and cat tensors to function
+    with torch.no_grad():
+        y_val = model(cat_prod, cont_prod)
+    
+    # Get preds on prod data
+    preds = [] 
+    for i in range(len(cat_prod)):
+        result = y_val[i].item()
+        preds.append(result)
+        
+        if verbose == True:
+            print(f'The predicted value is: {y_val[i].item()}')
+        
+    return preds
+    
+    
+# Use prod data function
+prod = prod_data(model_infer, cats, conts, verbose=True)
 
+        
+        
 
-
-
-
+    
