@@ -67,8 +67,3 @@ def prod_data(model, cat_prod, cont_prod, verbose=False):
     
 # Use prod data function
 prod = prod_data(model_infer, cats, conts, verbose=True)
-
-        
-        
-
-    
