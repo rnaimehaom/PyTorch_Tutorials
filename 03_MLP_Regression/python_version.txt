@@ -1,0 +1,1 @@
+Developed with Python version 3.7.13 and packages in the requirements.txt
