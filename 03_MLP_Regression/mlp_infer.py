@@ -1,3 +1,11 @@
+
+""" 
+Name:       PyTorch inference script for PyTorch regression MLP
+Author:     Gary Hutson
+Date:       01/08/2022
+Purpose:    Python code to support the binary PyTorch classification tutorial
+"""
+
 import torch
 import torch.nn as nn
 import numpy as np
