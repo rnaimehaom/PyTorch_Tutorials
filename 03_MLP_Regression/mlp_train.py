@@ -1,4 +1,10 @@
 
+""" 
+Name:       PyTorch MLP from scratch for regression
+Author:     Gary Hutson
+Date:       03/05/2022
+Purpose:    Python code to support the regression tutorial for predicting medical costs (continuous outcomes)
+"""
 import torch
 import torch.nn as nn
 import numpy as np
