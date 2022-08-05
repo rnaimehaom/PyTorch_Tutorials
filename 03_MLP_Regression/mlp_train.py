@@ -183,4 +183,3 @@ plt.figure()
 palette = sns.color_palette("mako_r", 6)
 sns.lineplot(data=eval_df, x='epochs', y='loss', palette=palette)
 plt.savefig(f'charts/{data_name}_loss_chart_{current_time}.png')
-
