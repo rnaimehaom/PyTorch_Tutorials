@@ -13,5 +13,5 @@
 The following PyTorch tutorials are currently active:
 
 - [01 - Building a MLP Binary Classifier with PyTorch for Thyroid Disease classification and Ionsphere baselining](https://github.com/StatsGary/PyTorch_Tutorials/tree/main/01_MLP_Thyroid_Classifier) - this is a project that takes you from creating a data loader, to training a model, to evaluating a model to making inferences against the model. 
-- [02 - Building a MLP Regression network with PyTorch for Medical Insurance cost estimation]() 
+- [02 - Building a MLP Regression network with PyTorch for Medical Insurance cost estimation](https://github.com/StatsGary/PyTorch_Tutorials/tree/main/02_MLP_Regression) - shows how to implement a regression neural network from scratch end to end. The use case for this is working with a Kaggle dataset for Medical Insurance estimation. The aim of this is to show you how to implement the model, with the focus not being on extensive feature engineering and outlier treatment, as this is a Kaggle problem that would require this. 
 
