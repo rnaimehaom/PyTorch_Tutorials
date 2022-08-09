@@ -39,7 +39,7 @@ class VisionTransformerVIT(nn.Module):
         
         # Classification token
         self.class_token = nn.Parameter(torch.rand(1, self.hidden_d))
-        
+
         # Position embedding 
         # Refer to forward method
         
@@ -47,7 +47,15 @@ class VisionTransformerVIT(nn.Module):
         
         # Multi=headed Self Attention and classification token
         
+        # Implement self.msa 
         
+        # Layer normalisation 2
+        self.ln2 = nn.LayerNorm((self.n_patches **2 + 1, self.hidden_d))
+        
+        # Encoder MLP
+        self.encoder_mlp = nn.Sequential(
+            nn.Linear(self.hidden_d, self.hidden_d)
+        )
         
         
         
