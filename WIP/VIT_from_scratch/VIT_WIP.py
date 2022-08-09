@@ -15,6 +15,26 @@ from torchvision.transforms import ToTensor
 np.random.seed(123)
 torch.manual_seed(123)
 
+
+# Create method for seperating each image into patches 
+def patcher(images, n_patches):
+    n, c, h, w = images.shape
+
+    assert h == w, "Patch method is implemented for square images only"
+
+    patches = torch.zeros(n, n_patches ** 2, h * w // n_patches ** 2)
+    patch_size = h // n_patches
+
+    for idx, image in enumerate(images):
+        for i in range(n_patches):
+            for j in range(n_patches):
+                patch = image[:, i * patch_size: (i + 1) * patch_size, j * patch_size: (j + 1) * patch_size]
+                patches[idx, i * n_patches + j] = patch.flatten()
+    return patches
+
+
+
+
 # Create VIT class
 
 class VisionTransformerVIT(nn.Module):
@@ -43,26 +63,38 @@ class VisionTransformerVIT(nn.Module):
         # Position embedding 
         # Refer to forward method
         
-        self.layer_norm1 = nn.LayerNorm((self.n_patches **2 + 1, self.hidden_d))
+        self.ln1= nn.LayerNorm((self.n_patches **2 + 1, self.hidden_d))
         
         # Multi=headed Self Attention and classification token
         
         # Implement self.msa 
         
         # Layer normalisation 2
-        self.ln2 = nn.LayerNorm((self.n_patches **2 + 1, self.hidden_d))
+        self.ln2 = nn.LayerNorm((self.n_patches ** 2 + 1, self.hidden_d))
         
         # Encoder MLP
         self.encoder_mlp = nn.Sequential(
-            nn.Linear(self.hidden_d, self.hidden_d)
+            nn.Linear(self.hidden_d, self.hidden_d),
+            nn.ReLU()
         )
         
-        
-        
+        # Classification MLP
+        self.mlp = nn.Sequential(
+            nn.Linear(self.hidden_d, out_d),
+            nn.Softmax(dim=-1))
         
                 
     def forward(self, images):
-        pass
+        # Dividing images into patches
+        n,c,w,h = images.shape
+        patches = patcher(images, self.n_patches)
+        
+        # Run linear for tokenization process
+        tokens = self.linear_mapper(patches)
+        
+        # Add classification token to the token
+        tokens = torch.stack([torch.vstack])
+        
 
 
 
