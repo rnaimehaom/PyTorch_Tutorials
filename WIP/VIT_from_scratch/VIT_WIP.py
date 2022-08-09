@@ -7,4 +7,11 @@ from torch.utils.data import DataLoader
 
 #https://medium.com/mlearning-ai/vision-transformers-from-scratch-pytorch-a-step-by-step-guide-96c3313c2e0c
 # Get example datasets from torchvision
-from torchvision.datasets import MNIST
+from torchvision.datasets.mnist import MNIST
+from torchvision.transforms import ToTensor
+
+np.random.seed(123)
+torch.manual_seed(123)
+
+# Setup the function 
+
