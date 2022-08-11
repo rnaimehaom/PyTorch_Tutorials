@@ -160,7 +160,7 @@ class ImageTransformer(nn.Module):
         
         if self.large_network == True:
             x = self.af1(x)
-            x = self.do1(x)
+            x = self.drop1(x)
             x = self.nn2(x)
             x = self.drop2(x)
         
