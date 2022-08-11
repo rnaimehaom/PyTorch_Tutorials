@@ -26,16 +26,16 @@ from VisionTransformer.data import get_and_copy_images, create_train_and_val_dir
 
 
 # Set our training params
-BATCH_SIZE_TRAIN = 8
-BATCH_SIZE_TEST = 8
-N_EPOCHS = 100
+BATCH_SIZE_TRAIN = 64
+BATCH_SIZE_TEST = 64
+N_EPOCHS = 50
 DATASET_PATH = 'images/flower_photos'
 TRAIN_DIR_NAME = 'train'
 VALID_DIR_NAME = 'valid'
-VAL_SPLIT = 0.2
+VAL_SPLIT = 0.1
 MODEL_NAME = 'flowers_VIT'
-INPUT_WIDTH = 32
-INPUT_HEIGHT = 32
+INPUT_WIDTH = 64
+INPUT_HEIGHT = 64
 PATCH_SIZE = 6
 NUM_PATCHES = (INPUT_HEIGHT // PATCH_SIZE) ** 2
 SAVE_PATH = "models" 
@@ -56,8 +56,8 @@ transforms_train = transforms.Compose(
         transforms.RandomHorizontalFlip(p=0.25),
         transforms.RandomVerticalFlip(p=0.25),
         transforms.RandomRotation(degrees=15),
-        transforms.ToTensor()
-     ])
+        transforms.ToTensor()]
+     )
 
 transforms_valid = torchvision.transforms.Compose(
     [
@@ -129,7 +129,7 @@ def evaluate(model, data_loader, loss_history):
 
 # # Use our model
 model = ImageTransformer(image_size=INPUT_HEIGHT, patch_size=4, num_classes=5, 
-                         channels=3,dim=64, depth=3, att_heads=8, 
+                         channels=3,dim=64, depth=6, att_heads=8, 
                          mlp_dim=128, large_network=False)
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
