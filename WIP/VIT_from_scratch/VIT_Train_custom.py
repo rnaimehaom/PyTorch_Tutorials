@@ -10,7 +10,7 @@ import time
 import torch
 import torchvision
 import torch.nn.functional as F
-import torchvision.transforms as T
+from torchvision import transforms 
 from imutils import paths
 import numpy as np
 from torchvision.datasets import ImageFolder
@@ -49,14 +49,14 @@ create_train_and_val_dirs(DATASET_PATH, 0.1,
 
 
 # Create our data transforms
-transforms_train = torchvision.transforms.Compose(
+transforms_train = transforms.Compose(
      [
-        torchvision.transforms.Resize(size=(INPUT_HEIGHT, INPUT_WIDTH)),
-        torchvision.transforms.RandomHorizontalFlip(),
-        torchvision.transforms.RandomRotation(10, interpolation=T.InterpolationMode.BILINEAR),
-        torchvision.transforms.RandomAffine(8, translate=(.15,.15)),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        transforms.Resize(size=(INPUT_HEIGHT, INPUT_WIDTH)),
+        # Horizontal flip
+        transforms.RandomHorizontalFlip(p=0.25),
+        transforms.RandomVerticalFlip(p=0.25),
+        transforms.RandomRotation(degrees=15),
+        transforms.ToTensor()
      ])
 
 transforms_valid = torchvision.transforms.Compose(
