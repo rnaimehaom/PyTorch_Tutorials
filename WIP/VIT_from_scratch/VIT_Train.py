@@ -14,7 +14,6 @@ import torchvision.transforms as T
 
 # Get our custom imports
 from VisionTransformer.model_components import *
-from VisionTransformer.dataloaders import preprocess_and_transform_CIFAR
 
 # Set our training params
 BATCH_SIZE_TRAIN = 100
@@ -92,8 +91,9 @@ def evaluate(model, data_loader, loss_history):
 
 # Use our model
 
-model = ImageTransformer(image_size=32, patch_size=4, num_classes=10, channels=3,
-            dim=64, depth=6, att_heads=8, mlp_dim=128)
+model = ImageTransformer(image_size=32, patch_size=4, num_classes=10, 
+                         channels=3,dim=64, depth=6, att_heads=8, 
+                         mlp_dim=128)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.003)
 
 
@@ -105,7 +105,9 @@ for epoch in range(1, N_EPOCHS + 1):
     print('Execution time:', '{:5.2f}'.format(time.time() - start_time), 'seconds')
     evaluate(model, test_loader, test_loss_history)
 
-print('Execution time')
+
+
+# Save your trained model
 
 PATH = ".\ViTnet_Cifar10_4x4_aug_1.pt" # Use your own path
 torch.save(model.state_dict(), PATH)
