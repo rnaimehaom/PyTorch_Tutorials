@@ -11,7 +11,6 @@ Usage:          python 02_train_fe.py
 import transferlearner.config as cfg
 from transferlearner.utils.data import get_dataloader
 from transferlearner.graphs import visualise
-from imutils import paths
 
 # Import the model backbone to use for transfer learning
 from torchvision.models import resnet50
@@ -71,7 +70,7 @@ model = model.to(cfg.DEVICE)
 # Create training function
 #-------------------------------------------------------------------------
 
-def train(model, train_ds, valid_ds, lr=0.001, batch_size=64, epochs=10, device='cuda'):
+def train(model, train_ds, valid_ds, train_dl, valid_dl, lr=0.001, batch_size=64, epochs=10, device='cuda'):
 	loss_function = nn.CrossEntropyLoss()
 	optimizer = torch.optim.Adam(model.fc.parameters(), lr=lr)
 	# Steps per epoch calc
@@ -165,6 +164,7 @@ def train(model, train_ds, valid_ds, lr=0.001, batch_size=64, epochs=10, device=
 trained_model = train(
 	model,
  	train_ds=train_ds, valid_ds=valid_ds,
+	train_dl=train_dl, valid_dl=valid_dl,
 	lr=cfg.LR,
 	batch_size=cfg.FEATURE_EXTRACTION_BATCH_SIZE,
 	epochs=cfg.EPOCHS,
@@ -174,8 +174,8 @@ trained_model = train(
 # Unpack the trained model and history dictionary
 history, model = trained_model
 
-# Create function to visualise history
-visualise(history, output_plot=cfg.WARMUP_PLOT)
+# # Create function to visualise history
+# visualise(history, output_plot=cfg.WARMUP_PLOT)
 
 # serialize the model to disk
 torch.save(model, cfg.WARMUP_MODEL)
