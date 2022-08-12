@@ -24,7 +24,7 @@ LR = 0.001
 LR_FINETUNE = 0.0005
 
 # where to store stuff!
-WARMUP_PLOT = os.path.join("output", "warmup.png")
+WARMUP_PLOT = os.path.join("output", "model_warmup.png")
 FINETUNE_PLOT = os.path.join("output", "finetune.png")
 WARMUP_MODEL = os.path.join("output", "warmup_model.pth")
 FINETUNE_MODEL = os.path.join("output", "finetune_model.pth")

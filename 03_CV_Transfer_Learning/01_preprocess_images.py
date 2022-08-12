@@ -3,14 +3,12 @@ Name:           PyTorch Transfer Learning Tutorials
 Script Name:    01_preprocess_images.py
 Author:         Gary Hutson
 Date:           12/08/2022
-Usage:          python 01_preprocess_images.py
+Usage:          python 01_preprocess_images.py∂ß
 
 """
 
 from transferlearner.utils.data import copy_images
-import transferlearner.utils.config as cfg
-import os
-import shutil
+import transferlearner.config as cfg
 from imutils import paths
 import numpy as np
 

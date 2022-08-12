@@ -8,8 +8,9 @@ Usage:          python 02_train_fe.py
 """
 
 # import the necessary packages
-import transferlearner.utils.config as cfg
+import transferlearner.config as cfg
 from transferlearner.utils.data import get_dataloader
+from transferlearner.graphs import visualise
 from imutils import paths
 
 # Import the model backbone to use for transfer learning
@@ -146,10 +147,10 @@ def train(model, train_ds, valid_ds, lr=0.001, batch_size=64, epochs=10, device=
 		history["val_acc"].append(val_correct)
 
 		# print the model training and validation information
-		print("[INFO] EPOCH: {}/{}".format(e + 1, epochs))
-		print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(
+		print("EPOCH: {}/{}".format(e + 1, epochs))
+		print("Training loss: {:.6f}, Train accuracy: {:.4f}".format(
 			mean_train_loss, train_correct))
-		print("Val loss: {:.6f}, Val accuracy: {:.4f}".format(
+		print("Validation loss: {:.6f}, Validation accuracy: {:.4f}".format(
 			mean_valid_loss, val_correct))
 
 	# display the total time needed to perform the training
@@ -161,7 +162,7 @@ def train(model, train_ds, valid_ds, lr=0.001, batch_size=64, epochs=10, device=
 
 
 # Set model to train
-train(
+trained_model = train(
 	model,
  	train_ds=train_ds, valid_ds=valid_ds,
 	lr=cfg.LR,
@@ -170,33 +171,11 @@ train(
 	device=cfg.DEVICE
 )
 
+# Unpack the trained model and history dictionary
+history, model = trained_model
 
+# Create function to visualise history
+visualise(history, output_plot=cfg.WARMUP_PLOT)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # plot the training loss and accuracy
-# plt.style.use("ggplot")
-# plt.figure()
-# plt.plot(H["train_loss"], label="train_loss")
-# plt.plot(H["val_loss"], label="val_loss")
-# plt.plot(H["train_acc"], label="train_acc")
-# plt.plot(H["val_acc"], label="val_acc")
-# plt.title("Training Loss and Accuracy on Dataset")
-# plt.xlabel("Epoch #")
-# plt.ylabel("Loss/Accuracy")
-# plt.legend(loc="lower left")
-# plt.savefig(cfg.WARMUP_PLOT)
-
-# # serialize the model to disk
-# torch.save(model, cfg.WARMUP_MODEL)
+# serialize the model to disk
+torch.save(model, cfg.WARMUP_MODEL)

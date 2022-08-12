@@ -5,7 +5,7 @@ import os
 import json
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from transferlearner.utils import config
+import transferlearner.config as cfg
 
 def copy_images(imagePaths, folder):
 	if not os.path.exists(folder):
@@ -43,7 +43,7 @@ def get_dataloader(src_dir, custom_transforms, batch_size, random_shuffle=True):
         shuffle=random_shuffle,
         num_workers=os.cpu_count(),
         # See if you have a GPU on your machine, or not
-        pin_memory=True if config.DEVICE == 'cuda' else False
+        pin_memory=True if cfg.DEVICE == 'cuda' else False
     )
     
     
