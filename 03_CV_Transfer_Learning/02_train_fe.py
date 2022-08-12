@@ -1,10 +1,18 @@
-# USAGE
-# python train_feature_extraction.py
+""" 
+Name:           PyTorch Transfer Learning Tutorials
+Script Name:    02_train_fe.py
+Author:         Gary Hutson
+Date:           12/08/2022
+Usage:          python 02_train_fe.py
+
+"""
 
 # import the necessary packages
-from pyimagesearch import config
-from pyimagesearch import create_dataloaders
+from transferlearner.utils import config
+from transferlearner.utils.data import create_dataloaders
 from imutils import paths
+
+# Import the model backbone to use for transfer learning
 from torchvision.models import resnet50
 from torchvision import transforms
 from tqdm import tqdm
@@ -14,15 +22,19 @@ import numpy as np
 import torch
 import time
 
-# define augmentation pipelines
-trainTansform = transforms.Compose([
+#-------------------------------------------------------------------------
+# Data augmentation and loader steps
+#-------------------------------------------------------------------------
+
+train_transform = transforms.Compose([
 	transforms.RandomResizedCrop(config.IMAGE_SIZE),
 	transforms.RandomHorizontalFlip(),
 	transforms.RandomRotation(90),
 	transforms.ToTensor(),
+	# Normalise based on the mean and SD of the RGB pixel distribution
 	transforms.Normalize(mean=config.MEAN, std=config.STD)
 ])
-valTransform = transforms.Compose([
+valid_transform = transforms.Compose([
 	transforms.Resize((config.IMAGE_SIZE, config.IMAGE_SIZE)),
 	transforms.ToTensor(),
 	transforms.Normalize(mean=config.MEAN, std=config.STD)
@@ -30,22 +42,24 @@ valTransform = transforms.Compose([
 
 # create data loaders
 (trainDS, trainLoader) = create_dataloaders.get_dataloader(config.TRAIN,
-	transforms=trainTansform,
+	transforms=train_transform,
 	batchSize=config.FEATURE_EXTRACTION_BATCH_SIZE)
 (valDS, valLoader) = create_dataloaders.get_dataloader(config.VAL,
-	transforms=valTransform,
+	transforms=valid_transform,
 	batchSize=config.FEATURE_EXTRACTION_BATCH_SIZE, shuffle=False)
 
-# load up the ResNet50 model
+#-------------------------------------------------------------------------
+# Load RESNET50 model backbone
+#-------------------------------------------------------------------------
 model = resnet50(pretrained=True)
 
-# since we are using the ResNet50 model as a feature extractor we set
-# its parameters to non-trainable (by default they are trainable)
+# Feature extraction = requires_grad = False
+# Meaning we are using this to extract features and use in another
+# modelling context
 for param in model.parameters():
 	param.requires_grad = False
 
-# append a new classification top to our feature extractor and pop it
-# on to the current device
+
 modelOutputFeats = model.fc.in_features
 model.fc = nn.Linear(modelOutputFeats, len(trainDS.classes))
 model = model.to(config.DEVICE)

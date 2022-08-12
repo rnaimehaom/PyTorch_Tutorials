@@ -3,45 +3,24 @@ import numpy as np
 import shutil
 import os
 import json
+from torch.utils.data import DataLoader
+from torchvision import datasets
+from transferlearner.utils import config
 
+def copy_images(imagePaths, folder):
+	if not os.path.exists(folder):
+		os.makedirs(folder)
 
-def get_and_copy_images(img_pths, folder):
-    # Check the destination folder exists
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-        
-    # Loop over the image paths
-    for path in img_pths:
-       img_name = path.split(os.path.sep)[-1]
-       label = path.split(os.path.sep)[-2] 
-       lbl_folder = os.path.join(folder, label)
-       
-       if not os.path.exists(lbl_folder):
-           os.makedirs(lbl_folder)
-           
-       destination = os.path.join(lbl_folder, img_name)
-       shutil.copy(path, destination)
-        
-           
-def create_train_and_val_dirs(dataset_path:str, val_split:float=0.2, train_dir_name:str='images/train', val_dir_name:str='images/valid'):
-    print("[INFO] loading image paths...")
-    imagePaths = list(paths.list_images(dataset_path))
-    np.random.shuffle(imagePaths)
+	for path in imagePaths:
+		imageName = path.split(os.path.sep)[-1]
+		label = path.split(os.path.sep)[1]
+		labelFolder = os.path.join(folder, label)
 
-    # generate training and validation paths
-    valid_path_len = int(len(imagePaths) * val_split)
-    train_path_len = len(imagePaths) - valid_path_len
-    trainPaths = imagePaths[:train_path_len]
-    valPaths = imagePaths[train_path_len:]
+		if not os.path.exists(labelFolder):
+			os.makedirs(labelFolder)
 
-    # copy the training and validation images to their respective
-    # directories
-    print("[INFO] copying training and validation images...")
-    get_and_copy_images(trainPaths, train_dir_name)
-    get_and_copy_images(valPaths, val_dir_name)
-    
-    print("[INFO] copying completed...")  
-    
+		destination = os.path.join(labelFolder, imageName)
+		shutil.copy(path, destination)   
     
 def save_class_labels_to_json(train_dataset, file_name='labels.json'):
     classes = train_dataset.classes
@@ -50,3 +29,26 @@ def save_class_labels_to_json(train_dataset, file_name='labels.json'):
     with open(file_name, 'w') as file:
         json.dump(dict_class,file)
     return classes, dict_class     
+
+
+def get_dataloader(src_dir, custom_transforms, batch_size, random_shuffle=True):
+    print(f'[DATASET INFO] creating dataset in {src_dir}')
+    dataset = datasets.ImageFolder(
+        root = src_dir, 
+        transform=custom_transforms
+    )
+    print('[DATALOADER] creating dataloader ready for use with PyTorch')
+    data_loader = DataLoader(
+        dataset, batch_size=batch_size, 
+        shuffle=random_shuffle,
+        num_workers=os.cpu_count(),
+        # See if you have a GPU on your machine, or not
+        pin_memory=True if config.DEVICE == 'cuda' else False
+    )
+    
+    for i in dataset.classes:
+        print(f'Data loader contains class {i}')
+        
+    # Use json dumping function to create JSON object that can be used to inspect class structure
+    save_class_labels_to_json(dataset, file_name='dataset_labels.json')
+    return (dataset, data_loader)
