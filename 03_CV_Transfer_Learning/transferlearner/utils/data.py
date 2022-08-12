@@ -46,9 +46,5 @@ def get_dataloader(src_dir, custom_transforms, batch_size, random_shuffle=True):
         pin_memory=True if config.DEVICE == 'cuda' else False
     )
     
-    for i in dataset.classes:
-        print(f'Data loader contains class {i}')
-        
-    # Use json dumping function to create JSON object that can be used to inspect class structure
-    save_class_labels_to_json(dataset, file_name='dataset_labels.json')
+    
     return (dataset, data_loader)

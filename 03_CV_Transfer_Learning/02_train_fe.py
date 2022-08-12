@@ -8,8 +8,8 @@ Usage:          python 02_train_fe.py
 """
 
 # import the necessary packages
-from transferlearner.utils import config
-from transferlearner.utils.data import create_dataloaders
+import transferlearner.utils.config as cfg
+from transferlearner.utils.data import get_dataloader
 from imutils import paths
 
 # Import the model backbone to use for transfer learning
@@ -27,26 +27,27 @@ import time
 #-------------------------------------------------------------------------
 
 train_transform = transforms.Compose([
-	transforms.RandomResizedCrop(config.IMAGE_SIZE),
+	transforms.RandomResizedCrop(cfg.IMAGE_SIZE),
 	transforms.RandomHorizontalFlip(),
 	transforms.RandomRotation(90),
 	transforms.ToTensor(),
 	# Normalise based on the mean and SD of the RGB pixel distribution
-	transforms.Normalize(mean=config.MEAN, std=config.STD)
+	transforms.Normalize(mean=cfg.MEAN, std=cfg.STD)
 ])
 valid_transform = transforms.Compose([
-	transforms.Resize((config.IMAGE_SIZE, config.IMAGE_SIZE)),
+	transforms.Resize((cfg.IMAGE_SIZE, cfg.IMAGE_SIZE)),
 	transforms.ToTensor(),
-	transforms.Normalize(mean=config.MEAN, std=config.STD)
+	transforms.Normalize(mean=cfg.MEAN, std=cfg.STD)
 ])
 
-# create data loaders
-(trainDS, trainLoader) = create_dataloaders.get_dataloader(config.TRAIN,
-	transforms=train_transform,
-	batchSize=config.FEATURE_EXTRACTION_BATCH_SIZE)
-(valDS, valLoader) = create_dataloaders.get_dataloader(config.VAL,
-	transforms=valid_transform,
-	batchSize=config.FEATURE_EXTRACTION_BATCH_SIZE, shuffle=False)
+# Dataloader creation
+(train_ds, train_dl) = get_dataloader(cfg.TRAIN,
+	custom_transforms=train_transform,
+	batch_size=cfg.FEATURE_EXTRACTION_BATCH_SIZE)
+
+(valid_ds, valid_dl) = get_dataloader(cfg.VAL,
+	custom_transforms=valid_transform,
+	batch_size=cfg.FEATURE_EXTRACTION_BATCH_SIZE, random_shuffle=False)
 
 #-------------------------------------------------------------------------
 # Load RESNET50 model backbone
@@ -60,119 +61,142 @@ for param in model.parameters():
 	param.requires_grad = False
 
 
-modelOutputFeats = model.fc.in_features
-model.fc = nn.Linear(modelOutputFeats, len(trainDS.classes))
-model = model.to(config.DEVICE)
+# Add our head to top of network
+mod_out_feats = model.fc.in_features
+model.fc = nn.Linear(mod_out_feats, len(train_ds.classes))
+model = model.to(cfg.DEVICE)
 
-# initialize loss function and optimizer (notice that we are only
-# providing the parameters of the classification top to our optimizer)
-lossFunc = nn.CrossEntropyLoss()
-opt = torch.optim.Adam(model.fc.parameters(), lr=config.LR)
+#-------------------------------------------------------------------------
+# Create training function
+#-------------------------------------------------------------------------
 
-# calculate steps per epoch for training and validation set
-trainSteps = len(trainDS) // config.FEATURE_EXTRACTION_BATCH_SIZE
-valSteps = len(valDS) // config.FEATURE_EXTRACTION_BATCH_SIZE
+def train(model, train_ds, valid_ds, lr=0.001, batch_size=64, epochs=10, device='cuda'):
+	loss_function = nn.CrossEntropyLoss()
+	optimizer = torch.optim.Adam(model.fc.parameters(), lr=lr)
+	# Steps per epoch calc
+	training_steps = len(train_ds) // batch_size
+	valid_steps = len(valid_ds) // batch_size
+	
+	# Create a history similar to tensorflow
+	history = {"train_loss": [], "train_acc": [], "val_loss": [],
+		"val_acc": []}
 
-# initialize a dictionary to store training history
-H = {"train_loss": [], "train_acc": [], "val_loss": [],
-	"val_acc": []}
+	# loop over epochs
+	print("[INFO] training the network...")
+	startTime = time.time()
+	for e in tqdm(range(epochs)):
+     
+		#--------------------- Train mode -------------------------------
+		model.train()
+		tot_train_loss = 0
+		tot_valid_loss = 0
 
-# loop over epochs
-print("[INFO] training the network...")
-startTime = time.time()
-for e in tqdm(range(config.EPOCHS)):
-	# set the model in training mode
-	model.train()
+		# initialize the number of correct predictions in the training
+		# and validation step
+		train_correct = 0
+		val_correct = 0
 
-	# initialize the total training and validation loss
-	totalTrainLoss = 0
-	totalValLoss = 0
-
-	# initialize the number of correct predictions in the training
-	# and validation step
-	trainCorrect = 0
-	valCorrect = 0
-
-	# loop over the training set
-	for (i, (x, y)) in enumerate(trainLoader):
-		# send the input to the device
-		(x, y) = (x.to(config.DEVICE), y.to(config.DEVICE))
-
-		# perform a forward pass and calculate the training loss
-		pred = model(x)
-		loss = lossFunc(pred, y)
-
-		# calculate the gradients
-		loss.backward()
-
-		# check if we are updating the model parameters and if so
-		# update them, and zero out the previously accumulated gradients
-		if (i + 2) % 2 == 0:
-			opt.step()
-			opt.zero_grad()
-
-		# add the loss to the total training loss so far and
-		# calculate the number of correct predictions
-		totalTrainLoss += loss
-		trainCorrect += (pred.argmax(1) == y).type(
-			torch.float).sum().item()
-
-	# switch off autograd
-	with torch.no_grad():
-		# set the model in evaluation mode
-		model.eval()
-
-		# loop over the validation set
-		for (x, y) in valLoader:
+		for (i, (x, y)) in enumerate(train_dl):
 			# send the input to the device
-			(x, y) = (x.to(config.DEVICE), y.to(config.DEVICE))
+			(x, y) = (x.to(device), y.to(device))
 
-			# make the predictions and calculate the validation loss
+			# perform a forward pass and calculate the training loss
 			pred = model(x)
-			totalValLoss += lossFunc(pred, y)
+			loss = loss_function(pred, y)
+   
+			# calculate the gradients
+			loss.backward()
 
-			# calculate the number of correct predictions
-			valCorrect += (pred.argmax(1) == y).type(
+			# check if we are updating the model parameters and if so
+			# update them, and zero out the previously accumulated gradients
+			if (i + 2) % 2 == 0:
+				optimizer.step()
+				optimizer.zero_grad()
+
+
+			tot_train_loss += loss
+			train_correct += (pred.argmax(1) == y).type(
 				torch.float).sum().item()
 
-	# calculate the average training and validation loss
-	avgTrainLoss = totalTrainLoss / trainSteps
-	avgValLoss = totalValLoss / valSteps
+		# --------- Evaluation mode -----------
+		with torch.no_grad():
+			# set the model in evaluation mode
+			model.eval()
+			for (x, y) in valid_dl:
+				(x, y) = (x.to(device), y.to(device))
+				# make the predictions and calculate the validation loss
+				pred = model(x)
+				tot_valid_loss += loss_function(pred, y)
+				# calculate the number of correct predictions
+				val_correct += (pred.argmax(1) == y).type(
+					torch.float).sum().item()
 
-	# calculate the training and validation accuracy
-	trainCorrect = trainCorrect / len(trainDS)
-	valCorrect = valCorrect / len(valDS)
+		# calculate the average training and validation loss
+		mean_train_loss = tot_train_loss / training_steps
+		mean_valid_loss = tot_valid_loss / valid_steps
 
-	# update our training history
-	H["train_loss"].append(avgTrainLoss.cpu().detach().numpy())
-	H["train_acc"].append(trainCorrect)
-	H["val_loss"].append(avgValLoss.cpu().detach().numpy())
-	H["val_acc"].append(valCorrect)
+		# calculate the training and validation accuracy
+		train_correct = train_correct / len(train_ds)
+		val_correct = val_correct / len(valid_ds)
 
-	# print the model training and validation information
-	print("[INFO] EPOCH: {}/{}".format(e + 1, config.EPOCHS))
-	print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(
-		avgTrainLoss, trainCorrect))
-	print("Val loss: {:.6f}, Val accuracy: {:.4f}".format(
-		avgValLoss, valCorrect))
+		# update our training history
+		history["train_loss"].append(mean_train_loss.cpu().detach().numpy())
+		history["train_acc"].append(train_correct)
+		history["val_loss"].append(mean_valid_loss.cpu().detach().numpy())
+		history["val_acc"].append(val_correct)
 
-# display the total time needed to perform the training
-endTime = time.time()
-print("[INFO] total time taken to train the model: {:.2f}s".format(
-	endTime - startTime))
+		# print the model training and validation information
+		print("[INFO] EPOCH: {}/{}".format(e + 1, epochs))
+		print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(
+			mean_train_loss, train_correct))
+		print("Val loss: {:.6f}, Val accuracy: {:.4f}".format(
+			mean_valid_loss, val_correct))
 
-# plot the training loss and accuracy
-plt.style.use("ggplot")
-plt.figure()
-plt.plot(H["train_loss"], label="train_loss")
-plt.plot(H["val_loss"], label="val_loss")
-plt.plot(H["train_acc"], label="train_acc")
-plt.plot(H["val_acc"], label="val_acc")
-plt.title("Training Loss and Accuracy on Dataset")
-plt.xlabel("Epoch #")
-plt.ylabel("Loss/Accuracy")
-plt.legend(loc="lower left")
-plt.savefig(config.WARMUP_PLOT)
+	# display the total time needed to perform the training
+	endTime = time.time()
+	print("[INFO] total time taken to train the model: {:.2f}s".format(
+		endTime - startTime))
+ 
+	return history, model
 
-# serialize the model to disk
-torch.save(model, config.WARMUP_MODEL)
+
+# Set model to train
+train(
+	model,
+ 	train_ds=train_ds, valid_ds=valid_ds,
+	lr=cfg.LR,
+	batch_size=cfg.FEATURE_EXTRACTION_BATCH_SIZE,
+	epochs=cfg.EPOCHS,
+	device=cfg.DEVICE
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # plot the training loss and accuracy
+# plt.style.use("ggplot")
+# plt.figure()
+# plt.plot(H["train_loss"], label="train_loss")
+# plt.plot(H["val_loss"], label="val_loss")
+# plt.plot(H["train_acc"], label="train_acc")
+# plt.plot(H["val_acc"], label="val_acc")
+# plt.title("Training Loss and Accuracy on Dataset")
+# plt.xlabel("Epoch #")
+# plt.ylabel("Loss/Accuracy")
+# plt.legend(loc="lower left")
+# plt.savefig(cfg.WARMUP_PLOT)
+
+# # serialize the model to disk
+# torch.save(model, cfg.WARMUP_MODEL)
