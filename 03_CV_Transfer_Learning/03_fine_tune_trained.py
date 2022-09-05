@@ -61,3 +61,17 @@ for module, param in zip(model.modules(), model.parameters()):
         
         
 # Define what the head of the network should look like and attach it
+
+head_model = nn.Sequential(
+    nn.Linear(num_feats, 512),
+    nn.ReLU(), 
+    nn.Dropout(0.25),
+    nn.Linear(512, 256),
+    nn.ReLU(),
+    nn.Dropout(0.5),
+    nn.Linear(256, len(train_ds.classes))
+)
+
+# Define the fully connected component
+model.fc = head_model
+
