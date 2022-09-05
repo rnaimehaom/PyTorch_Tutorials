@@ -2,8 +2,8 @@
 # python train_feature_extraction.py
 
 # import the necessary packages
-import transferlearner.config as config
-from transferlearner.utils.data import get_dataloader
+from pyimagesearch import config
+from pyimagesearch import create_dataloaders
 from imutils import paths
 from torchvision.models import resnet50
 from torchvision import transforms
@@ -29,14 +29,12 @@ valTransform = transforms.Compose([
 ])
 
 # create data loaders
-(trainDS, trainLoader) = get_dataloader(config.TRAIN,
-    custom_transforms=trainTansform,
-	batch_size=config.FEATURE_EXTRACTION_BATCH_SIZE)
-
-(valDS, valLoader) = get_dataloader(config.VAL,
-	custom_transforms=valTransform,
-	batch_size=config.FEATURE_EXTRACTION_BATCH_SIZE, 
-    random_shuffle=False)
+(trainDS, trainLoader) = create_dataloaders.get_dataloader(config.TRAIN,
+	transforms=trainTansform,
+	batchSize=config.FEATURE_EXTRACTION_BATCH_SIZE)
+(valDS, valLoader) = create_dataloaders.get_dataloader(config.VAL,
+	transforms=valTransform,
+	batchSize=config.FEATURE_EXTRACTION_BATCH_SIZE, shuffle=False)
 
 # load up the ResNet50 model
 model = resnet50(pretrained=True)

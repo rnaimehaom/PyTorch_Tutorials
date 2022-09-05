@@ -2,7 +2,7 @@
 import torch
 import os
 
-DATA_PATH = "images/flower_photos"
+DATA_PATH = "flower_photos"
 BASE_PATH = "dataset"
 VAL_SPLIT = 0.1
 TRAIN = os.path.join(BASE_PATH, "train")
@@ -24,7 +24,7 @@ LR = 0.001
 LR_FINETUNE = 0.0005
 
 # where to store stuff!
-WARMUP_PLOT = os.path.join("output", "model_warmup.png")
-FINETUNE_PLOT = os.path.join("output", "finetune.png")
-WARMUP_MODEL = os.path.join("output", "warmup_model.pth")
-FINETUNE_MODEL = os.path.join("output", "finetune_model.pth")
+WARMUP_PLOT = os.path.join("model_output", "model_warmup.png")
+FINETUNE_PLOT = os.path.join("model_output", "finetune.png")
+WARMUP_MODEL = os.path.join("model_output", "flower_warmup_model.pth")
+FINETUNE_MODEL = os.path.join("output", "flower_finetune_model.pth")

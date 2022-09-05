@@ -6,7 +6,6 @@ Date:           12/08/2022
 Usage:          python 02_train_fe.py
 
 """
-
 # import the necessary packages
 import transferlearner.config as cfg
 from transferlearner.utils.data import get_dataloader
