@@ -191,3 +191,7 @@ plt.xlabel("Epoch #")
 plt.ylabel("Loss/Accuracy")
 plt.legend(loc="lower left")
 plt.savefig(cfg.FINETUNE_PLOT)
+
+
+# Save the model
+torch.save(model, cfg.FINETUNE_MODEL)
