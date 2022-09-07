@@ -18,3 +18,12 @@ def AUROC(eta, idx0, idx1):
     return (num/denominator)
 
 
+def convex_AUROC(w, X, idx0, idx1):
+    eta = X.dot(w)
+    denominator = len(idx0) * len(idx1)
+    num = 0
+    for i in idx1:
+        num += sum(np.log(sigmoid(eta[i] - eta[idx0])))
+        
+    return (-num / denominator)
+    
