@@ -27,4 +27,4 @@ LR_FINETUNE = 0.0005
 WARMUP_PLOT = os.path.join("model_output", "model_warmup.png")
 FINETUNE_PLOT = os.path.join("model_output", "finetune.png")
 WARMUP_MODEL = os.path.join("model_output", "flower_warmup_model.pth")
-FINETUNE_MODEL = os.path.join("output", "flower_finetune_model.pth")
+FINETUNE_MODEL = os.path.join("model_output", "flower_finetune_model.pth")
