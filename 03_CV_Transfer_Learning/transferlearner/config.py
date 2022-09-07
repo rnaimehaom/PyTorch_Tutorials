@@ -18,7 +18,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # specify training hyperparameters
 FEATURE_EXTRACTION_BATCH_SIZE = 256
 FINETUNE_BATCH_SIZE = 64
-PRED_BATCH_SIZE = 4
+PRED_BATCH_SIZE = 8
 EPOCHS = 20
 LR = 0.001
 LR_FINETUNE = 0.0005
