@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm
 # Bring in custom imports
 from AUROCker.functions import sigmoid, AUROC, convex_AUROC, index_I0I1, derivative_chained_AUROC
 
@@ -29,55 +30,70 @@ from AUROCker.functions import sigmoid, AUROC, convex_AUROC, index_I0I1, derivat
 TOP_PROP = 0.9
 SPLIT_PROP = 0.2
 
-# Load in test dataset
+# Get the data
 data = fetch_california_housing(download_if_missing=True)
-feat_names_cali = data.feature_names
-print(feat_names_cali)
-
-# Split data 
-X = data.data
-y = data.target
-y += np.random.randn(y.shape[0])*(y.std())
-y = np.where(y > np.quantile(y, 0.95),1,0)
-
-# Create the splits
-y_train, y_test, X_train, X_test = train_test_split(y, X, test_size=SPLIT_PROP, stratify=y)
-scaled = StandardScaler().fit(X_train)
+cn_cali = data.feature_names
+X_cali = data.data
+y_cali = data.target
+y_cali += np.random.randn(y_cali.shape[0])*(y_cali.std())
+y_cali = np.where(y_cali > np.quantile(y_cali,0.95),1,0)
+y_cali_train, y_cali_test, X_cali_train, X_cali_test = \
+  train_test_split(y_cali, X_cali, test_size=0.2, random_state=1234, stratify=y_cali)
+enc = StandardScaler().fit(X_cali_train)
 
 
-# Create the feedforward network 
+# Create the training class
+
 class feedy(nn.Module):
-    def __init__(self, num_features):
-        super(feedy, self).__init__()
-        feats = num_features
-        self.fc1 = nn.Linear(feats, 36)
-        self.fc2 = nn.Linear(36,12)
-        self.fc3 = nn.Linear(12,6)
-        self.fc4 = nn.Linear(6,1)
-        
-    def forward(self,x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = self.fc4(x)
-        return X
+    def __init__(self,num_features):
+      super(feedy, self).__init__()
+      p = num_features
+      self.fc1 = nn.Linear(p, 36)
+      self.fc2 = nn.Linear(36, 12)
+      self.fc3 = nn.Linear(12, 6)
+      self.fc4 = nn.Linear(6,1)
     
+    def forward(self,x):
+      x = F.relu(self.fc1(x))
+      x = F.relu(self.fc2(x))
+      x = F.relu(self.fc3(x))
+      x = self.fc4(x)
+      return(x)
+
 # Binary loss function
 criterion = nn.BCEWithLogitsLoss()
-nnet = feedy(num_features=X.shape[1])
-optimizer = torch.optim.Adam(params=nnet.parameters(), lr=0.001)
+# Seed the network
+torch.manual_seed(1234)
+nnet = feedy(num_features=X_cali.shape[1])
+optimizer = torch.optim.Adam(params=nnet.parameters(),lr=0.001)
 
-# Validation and training samples
-y_held, y_valid, x_held, x_valid = train_test_split(y_train, X_train, test_size=SPLIT_PROP, stratify=y_train)
-scaler = StandardScaler().fit(x_held)
-idx0_held, idx1_held = index_I0I1(y_held)
+np.random.seed(1234)
 
-# Set the epochs
-epochs = 100
-auc_history = []
+y_cali_R, y_cali_V, X_cali_R, X_cali_V = \
+  train_test_split(y_cali_train, X_cali_train, test_size=0.2, random_state=1234, stratify=y_cali_train)
+enc = StandardScaler().fit(X_cali_R)
 
-for epoch in range(epochs):
-    print('[EPOCH] {} of {}'.format(epoch + 1, epochs))
-    # Sample class 0 pairs
-    idx0_epoch = np.random.choice(idx0_held)
-    
+idx0_R, idx1_R = index_I0I1(y_cali_R)
+
+nepochs = 100
+
+auc_holder = []
+for kk in range(nepochs):
+  print('Epoch %i of %i' % (kk+1, nepochs))
+  # Sample class 0 pairs
+  idx0_kk = np.random.choice(idx0_R,len(idx1_R),replace=False) 
+  for i,j in zip(idx1_R, idx0_kk):
+    optimizer.zero_grad() 
+    dlogit = nnet(torch.Tensor(enc.transform(X_cali_R[[i]]))) - \
+        nnet(torch.Tensor(enc.transform(X_cali_R[[j]]))) 
+    loss = criterion(dlogit.flatten(), torch.Tensor([1]))
+    loss.backward() # backprop
+    optimizer.step() # gradient-step
+  # Calculate AUC on held-out validation
+  auc_k = roc_auc_score(y_cali_V,
+    nnet(torch.Tensor(enc.transform(X_cali_V))).detach().flatten().numpy())
+  
+  print(f'Current AUROC: {auc_k*100:.3f}%')
+  if auc_k > 0.95:
+    print('AUC > 90% achieved')
+    break
