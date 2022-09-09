@@ -29,17 +29,18 @@ from AUROCker.functions import sigmoid, AUROC, convex_AUROC, index_I0I1, derivat
 # Constants
 TOP_PROP = 0.9
 SPLIT_PROP = 0.2
+LR = 0.001
 
 # Get the data
 data = fetch_california_housing(download_if_missing=True)
-cn_cali = data.feature_names
-X_cali = data.data
+data_feat_names = data.feature_names
+X = data.data
 y_cali = data.target
 y_cali += np.random.randn(y_cali.shape[0])*(y_cali.std())
 y_cali = np.where(y_cali > np.quantile(y_cali,0.95),1,0)
-y_cali_train, y_cali_test, X_cali_train, X_cali_test = \
-  train_test_split(y_cali, X_cali, test_size=0.2, random_state=1234, stratify=y_cali)
-enc = StandardScaler().fit(X_cali_train)
+y_cali_train, y_cali_test, X_train, X_test = \
+  train_test_split(y_cali, X, test_size=0.2, random_state=1234, stratify=y_cali)
+enc = StandardScaler().fit(X_train)
 
 
 # Create the training class
@@ -64,34 +65,33 @@ class feedy(nn.Module):
 criterion = nn.BCEWithLogitsLoss()
 # Seed the network
 torch.manual_seed(1234)
-nnet = feedy(num_features=X_cali.shape[1])
-optimizer = torch.optim.Adam(params=nnet.parameters(),lr=0.001)
+nnet = feedy(num_features=X.shape[1])
+optimizer = torch.optim.Adam(params=nnet.parameters(),lr=LR)
 
-np.random.seed(1234)
 
-y_cali_R, y_cali_V, X_cali_R, X_cali_V = \
-  train_test_split(y_cali_train, X_cali_train, test_size=0.2, random_state=1234, stratify=y_cali_train)
-enc = StandardScaler().fit(X_cali_R)
+y_cali_R, y_cali_V, X_R, X_V = \
+  train_test_split(y_cali_train, X_train, test_size=SPLIT_PROP, random_state=1234, stratify=y_cali_train)
+enc = StandardScaler().fit(X_R)
 
 idx0_R, idx1_R = index_I0I1(y_cali_R)
 
 nepochs = 100
 
 auc_holder = []
-for kk in range(nepochs):
-  print('Epoch %i of %i' % (kk+1, nepochs))
+for epoch in range(nepochs):
+  print('Epoch %i of %i' % (epoch+1, nepochs))
   # Sample class 0 pairs
-  idx0_kk = np.random.choice(idx0_R,len(idx1_R),replace=False) 
-  for i,j in zip(idx1_R, idx0_kk):
+  idx0_epoch = np.random.choice(idx0_R,len(idx1_R),replace=False) 
+  for i,j in zip(idx1_R, idx0_epoch):
     optimizer.zero_grad() 
-    dlogit = nnet(torch.Tensor(enc.transform(X_cali_R[[i]]))) - \
-        nnet(torch.Tensor(enc.transform(X_cali_R[[j]]))) 
+    dlogit = nnet(torch.Tensor(enc.transform(X_R[[i]]))) - \
+        nnet(torch.Tensor(enc.transform(X_R[[j]]))) 
     loss = criterion(dlogit.flatten(), torch.Tensor([1]))
     loss.backward() # backprop
     optimizer.step() # gradient-step
   # Calculate AUC on held-out validation
   auc_k = roc_auc_score(y_cali_V,
-    nnet(torch.Tensor(enc.transform(X_cali_V))).detach().flatten().numpy())
+    nnet(torch.Tensor(enc.transform(X_V))).detach().flatten().numpy())
   
   print(f'Current AUROC: {auc_k*100:.3f}%')
   if auc_k > 0.95:
