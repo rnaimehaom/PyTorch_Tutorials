@@ -77,6 +77,24 @@ agg = tensor.sum()
 agg_item = agg.item()
 print(agg_item, type(agg_item))
 
+# In place operations
+tensor.add_(5)
+print(tensor)
+
+# Casting operations
+t = torch.ones(10)
+nump = t.numpy()
+print(nump)
+
+# A change in the tensor affects the numpy array
+t.add_(1)
+print(t)
+
+# Numpy array to tensor
+n = np.ones(10)
+t = torch.from_numpy(n)
+np.add(n,1,out=n)
+print(t, '\n', n)
 
 
 
