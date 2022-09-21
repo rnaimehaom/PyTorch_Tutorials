@@ -30,6 +30,7 @@ from AUROCker.functions import sigmoid, AUROC, convex_AUROC, index_I0I1, derivat
 TOP_PROP = 0.9
 SPLIT_PROP = 0.2
 LR = 0.001
+QUANTILE_PROP = 0.95
 
 # Get the data
 data = fetch_california_housing(download_if_missing=True)
@@ -37,7 +38,7 @@ data_feat_names = data.feature_names
 X = data.data
 y_cali = data.target
 y_cali += np.random.randn(y_cali.shape[0])*(y_cali.std())
-y_cali = np.where(y_cali > np.quantile(y_cali,0.95),1,0)
+y_cali = np.where(y_cali > np.quantile(y_cali,QUANTILE_PROP),1,0)
 y_cali_train, y_cali_test, X_train, X_test = \
   train_test_split(y_cali, X, test_size=0.2, random_state=1234, stratify=y_cali)
 enc = StandardScaler().fit(X_train)
@@ -66,34 +67,47 @@ criterion = nn.BCEWithLogitsLoss()
 # Seed the network
 torch.manual_seed(1234)
 nnet = feedy(num_features=X.shape[1])
-optimizer = torch.optim.Adam(params=nnet.parameters(),lr=LR)
+optimizer = torch.optim.Adam(params=nnet.parameters(),
+                             lr=LR)
 
-
+# Create hold out and validation set
 y_cali_R, y_cali_V, X_R, X_V = \
   train_test_split(y_cali_train, X_train, test_size=SPLIT_PROP, random_state=1234, stratify=y_cali_train)
 enc = StandardScaler().fit(X_R)
-
 idx0_R, idx1_R = index_I0I1(y_cali_R)
 
-nepochs = 100
+from tqdm import tqdm
 
-auc_holder = []
-for epoch in range(nepochs):
-  print('Epoch %i of %i' % (epoch+1, nepochs))
-  # Sample class 0 pairs
-  idx0_epoch = np.random.choice(idx0_R,len(idx1_R),replace=False) 
-  for i,j in zip(idx1_R, idx0_epoch):
-    optimizer.zero_grad() 
-    dlogit = nnet(torch.Tensor(enc.transform(X_R[[i]]))) - \
-        nnet(torch.Tensor(enc.transform(X_R[[j]]))) 
-    loss = criterion(dlogit.flatten(), torch.Tensor([1]))
-    loss.backward() # backprop
-    optimizer.step() # gradient-step
-  # Calculate AUC on held-out validation
-  auc_k = roc_auc_score(y_cali_V,
-    nnet(torch.Tensor(enc.transform(X_V))).detach().flatten().numpy())
+def train_auroc_optimiser(epochs, auc_cutoff=0.95):
   
-  print(f'Current AUROC: {auc_k*100:.3f}%')
-  if auc_k > 0.95:
-    print('AUC > 90% achieved')
-    break
+  if not isinstance(epochs, int):
+    raise TypeError('The epochs value should be an integer value i.e. 200')
+  
+  nepochs = epochs
+  auc_holder = []
+  
+  for epoch in range(nepochs):
+    print('Epoch %i of %i' % (epoch+1, nepochs))
+    idx0_epoch = np.random.choice(idx0_R,len(idx1_R),replace=False)
+    for i,j in zip(idx1_R, idx0_epoch):
+      optimizer.zero_grad() 
+      model = nnet(torch.Tensor(enc.transform(X_R[[i]]))) - \
+        nnet(torch.Tensor(enc.transform(X_R[[j]]))) 
+      loss = criterion(model.flatten(), torch.Tensor([1]))
+      loss.backward() # backprop
+      optimizer.step() # gradient-step
+      
+    auc_k = roc_auc_score(y_cali_V, nnet(torch.Tensor(enc.transform(X_V))).detach().flatten().numpy())
+    auc_holder.append(auc_k)
+    print(f'Current AUROC: {auc_k*100:.3f}%')
+    if auc_k > auc_cutoff:
+      print('AUC cut off reached achieved')
+      torch.save(model, f'models/model_{auc_cutoff}_AUROC_at_EPOCH_{epoch}.pth')
+      break
+    
+  return model, auc_holder
+      
+    
+model, auc_holder = train_auroc_optimiser(200, 0.88)
+
+print(len(auc_holder))

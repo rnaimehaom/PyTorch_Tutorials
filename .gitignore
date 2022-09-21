@@ -159,3 +159,4 @@ WIP/VIT_from_scratch/archive/
 03_CV_Transfer_Learning/model_output/flower_warmup_model.pth
 03_CV_Transfer_Learning/model_output/flower_finetune_model.pth
 
+04_AUROC_optimisation/models/
